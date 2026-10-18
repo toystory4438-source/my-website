@@ -2,83 +2,2862 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>여백 로스터스 | 동네 스페셜티 원두</title>
-  <meta name="description" content="주문 후 볶아 보내는 동네 로스터리, 여백 로스터스">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>자리있슈 (Zari-Issue) | 캠퍼스 앞 카페 실시간 좌석 확인 서비스</title>
+  <!-- Google Fonts: Noto Sans KR, Pretendard fallback -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ==========================================================================
+       CSS Reset & Variables
+       ========================================================================== */
+    :root {
+      --primary: #1e4d38;         /* 깊은 포레스트 그린 (신뢰, 차분함) */
+      --primary-light: #2d6a4f;
+      --primary-soft: #e8f5ee;
+      --accent: #e76f51;          /* 포인트 코랄 오렌지 (활기, 강조) */
+      --accent-hover: #d45d3f;
+      --yellow: #f4a261;
+      --bg: #f8faf8;              /* 부드러운 오프화이트 */
+      --surface: #ffffff;
+      --surface-sub: #f1f5f2;
+      --text: #1f2937;
+      --text-muted: #6b7280;
+      --border: #e2e8f0;
+      --border-dark: #cbd5e1;
+      
+      --seat-free: #10b981;       /* 이용 가능 (초록) */
+      --seat-free-bg: #d1fae5;
+      --seat-busy: #94a3b8;       /* 사용 중 (회색) */
+      --seat-busy-bg: #f1f5f9;
+      --seat-hold: #f59e0b;       /* 15분 선점 중 (주황) */
+      --seat-hold-bg: #fef3c7;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.07);
+      --shadow-lg: 0 16px 36px rgba(30, 77, 56, 0.12);
+      --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      word-break: keep-all;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    ul, ol {
+      list-style: none;
+    }
+
+    button, input, textarea, select {
+      font-family: inherit;
+      font-size: inherit;
+    }
+
+    /* Container Layout */
+    .container {
+      width: 100%;
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+    }
+
+    /* Section Header Common */
+    .section {
+      padding: 5rem 0;
+      position: relative;
+    }
+
+    .section-alt {
+      background-color: var(--surface);
+    }
+
+    .section-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      margin-bottom: 0.85rem;
+      letter-spacing: -0.01em;
+    }
+
+    .section-title {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.03em;
+      margin-bottom: 0.8rem;
+      line-height: 1.3;
+    }
+
+    .section-desc {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 620px;
+      margin-bottom: 3rem;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+    .text-center .section-desc {
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ==========================================================================
+       Navigation Bar
+       ========================================================================== */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 68px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      font-size: 1.1rem;
+    }
+
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .nav-link {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: var(--transition);
+      padding: 0.4rem 0.2rem;
+    }
+
+    .nav-link:hover {
+      color: var(--primary);
+    }
+
+    .nav-cta {
+      background: var(--primary);
+      color: #fff !important;
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      transition: var(--transition);
+    }
+    .nav-cta:hover {
+      background: var(--primary-light);
+      transform: translateY(-1px);
+    }
+
+    /* Mobile Nav Scroll */
+    @media (max-width: 900px) {
+      .nav-menu {
+        display: none;
+      }
+    }
+
+    /* ==========================================================================
+       1. Hero Section
+       ========================================================================== */
+    .hero {
+      padding: 4.5rem 0 5rem;
+      background: radial-gradient(circle at 10% 20%, #e8f5ee 0%, rgba(248, 250, 248, 0) 50%),
+                  radial-gradient(circle at 90% 80%, #fef3c7 0%, rgba(248, 250, 248, 0) 50%);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 3.5rem;
+      align-items: center;
+    }
+
+    .hero-capstone-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(30, 77, 56, 0.08);
+      color: var(--primary);
+      border: 1px solid rgba(30, 77, 56, 0.15);
+      border-radius: 999px;
+      padding: 0.4rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 1.2rem;
+    }
+
+    .hero-title {
+      font-size: 2.85rem;
+      font-weight: 900;
+      line-height: 1.18;
+      letter-spacing: -0.04em;
+      margin-bottom: 1.3rem;
+      color: #111827;
+    }
+
+    .hero-title span.highlight {
+      color: var(--primary);
+      position: relative;
+      display: inline-block;
+    }
+    .hero-title span.highlight::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 6px;
+      width: 100%;
+      height: 12px;
+      background: rgba(231, 111, 81, 0.25);
+      z-index: -1;
+      border-radius: 4px;
+    }
+
+    .hero-desc {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.85rem 1.6rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: var(--transition);
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(30, 77, 56, 0.3);
+    }
+    .btn-primary:hover {
+      background: var(--primary-light);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(30, 77, 56, 0.4);
+    }
+
+    .btn-outline {
+      background: var(--surface);
+      color: var(--text);
+      border: 2px solid var(--border-dark);
+    }
+    .btn-outline:hover {
+      background: var(--surface-sub);
+      border-color: var(--text);
+    }
+
+    .hero-proof {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .proof-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .proof-num {
+      font-weight: 900;
+      font-size: 1.25rem;
+      color: var(--primary);
+    }
+
+    .proof-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Live Preview Card Widget */
+    .hero-widget {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 1.6rem;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      position: relative;
+    }
+
+    .widget-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.2rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .widget-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #fee2e2;
+      color: #b91c1c;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .widget-cafe-name {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .widget-cafe-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .widget-status-banner {
+      background: var(--primary-soft);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.2rem;
+    }
+
+    .status-left h4 {
+      font-size: 0.85rem;
+      color: var(--primary);
+      margin-bottom: 0.2rem;
+    }
+
+    .status-left .count {
+      font-size: 1.45rem;
+      font-weight: 900;
+      color: var(--primary);
+    }
+
+    .widget-quick-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.6rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .stat-box {
+      background: var(--surface-sub);
+      padding: 0.75rem 0.5rem;
+      border-radius: var(--radius-sm);
+      text-align: center;
+    }
+
+    .stat-box .val {
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+
+    .stat-box .desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    .widget-notify-pill {
+      background: #fffbeb;
+      border: 1px dashed #f59e0b;
+      padding: 0.65rem 0.9rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      color: #92400e;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* ==========================================================================
+       2. Problem Definition Section (문제 정의)
+       ========================================================================== */
+    .problems-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.6rem;
+    }
+
+    .problem-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 2rem 1.6rem;
+      transition: var(--transition);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .problem-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-light);
+    }
+
+    .problem-icon-wrap {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.7rem;
+      margin-bottom: 1.2rem;
+    }
+    .problem-card:nth-child(1) .problem-icon-wrap { background: #fee2e2; }
+    .problem-card:nth-child(2) .problem-icon-wrap { background: #fef3c7; }
+    .problem-card:nth-child(3) .problem-icon-wrap { background: #e0e7ff; }
+
+    .problem-tag {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+
+    .problem-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin-bottom: 0.8rem;
+      color: var(--text);
+      line-height: 1.35;
+    }
+
+    .problem-quote {
+      background: var(--surface-sub);
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 0.9rem;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 0.88rem;
+      font-style: italic;
+      color: #374151;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+
+    .problem-interviewee {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-align: right;
+      display: block;
+      margin-top: 0.2rem;
+      font-style: normal;
+      font-weight: 600;
+    }
+
+    .problem-stat {
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 1px dashed var(--border);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .problem-stat strong {
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    /* Problem Summary Banner */
+    .problem-banner {
+      margin-top: 2.5rem;
+      background: #111827;
+      color: #fff;
+      border-radius: var(--radius-md);
+      padding: 1.8rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .banner-text h3 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      margin-bottom: 0.3rem;
+    }
+    .banner-text p {
+      color: #9ca3af;
+      font-size: 0.92rem;
+    }
+    .banner-stat-box {
+      display: flex;
+      gap: 2rem;
+    }
+    .stat-pill-num {
+      font-size: 1.7rem;
+      font-weight: 900;
+      color: var(--yellow);
+    }
+    .stat-pill-label {
+      font-size: 0.78rem;
+      color: #d1d5db;
+    }
+
+    /* ==========================================================================
+       3. Solution Section (해결 방법)
+       ========================================================================== */
+    .solutions-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+    }
+
+    .solution-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.8rem 1.4rem;
+      text-align: left;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .solution-card:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-4px);
+    }
+
+    .solution-num {
+      position: absolute;
+      top: -12px;
+      right: 10px;
+      font-size: 4rem;
+      font-weight: 900;
+      color: rgba(30, 77, 56, 0.05);
+      user-select: none;
+    }
+
+    .solution-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .solution-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 0.6rem;
+    }
+
+    .solution-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .solution-chip {
+      display: inline-block;
+      background: var(--surface-sub);
+      color: var(--primary);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+    }
+
+    /* ==========================================================================
+       4. Competitor Comparison Section (유사 서비스 비교표)
+       ========================================================================== */
+    .table-container {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      overflow-x: auto;
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: center;
+      font-size: 0.95rem;
+      min-width: 680px;
+    }
+
+    .compare-table th, .compare-table td {
+      padding: 1.2rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .compare-table th {
+      background: var(--surface-sub);
+      font-weight: 800;
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+
+    .compare-table th.highlight-col,
+    .compare-table td.highlight-col {
+      background: #f0fdf4;
+      border-left: 2px solid var(--primary-light);
+      border-right: 2px solid var(--primary-light);
+    }
+    .compare-table th.highlight-col {
+      background: var(--primary);
+      color: #fff;
+      font-size: 1.05rem;
+    }
+
+    .compare-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .feature-name {
+      text-align: left;
+      font-weight: 700;
+      color: var(--text);
+      padding-left: 1.5rem !important;
+    }
+
+    .check-yes {
+      color: #10b981;
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+
+    .check-partial {
+      color: #f59e0b;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .check-no {
+      color: #cbd5e1;
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+
+    .compare-summary-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.2rem;
+      margin-top: 2rem;
+    }
+
+    .comp-diff-card {
+      background: var(--surface);
+      padding: 1.2rem 1.4rem;
+      border-radius: var(--radius-sm);
+      border-left: 4px solid var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .comp-diff-card h4 {
+      font-size: 0.95rem;
+      font-weight: 800;
+      margin-bottom: 0.3rem;
+      color: var(--primary);
+    }
+
+    .comp-diff-card p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* ==========================================================================
+       5. Interactive Prototype Section (프로토타입 체험)
+       ========================================================================== */
+    .prototype-wrapper {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+
+    .proto-tabs {
+      display: flex;
+      background: var(--surface-sub);
+      border-bottom: 1px solid var(--border);
+      padding: 0.5rem 0.5rem 0;
+      gap: 0.5rem;
+      overflow-x: auto;
+    }
+
+    .proto-tab-btn {
+      padding: 0.85rem 1.4rem;
+      border: none;
+      background: transparent;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+    }
+
+    .proto-tab-btn.active {
+      background: var(--surface);
+      color: var(--primary);
+      box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.03);
+      position: relative;
+    }
+    .proto-tab-btn.active::after {
+      content: "";
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--primary);
+    }
+
+    .proto-tab-content {
+      display: none;
+      padding: 2rem;
+    }
+    .proto-tab-content.active {
+      display: block;
+    }
+
+    /* TAB 1: Live Seat Map */
+    .seat-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .filter-btn-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-pill {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      padding: 0.4rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .filter-pill.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .seat-legend {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 4px;
+    }
+    .dot-free { background: var(--seat-free); }
+    .dot-busy { background: var(--seat-busy); }
+    .dot-hold { background: var(--seat-hold); }
+
+    /* The Floor Plan Grid */
+    .floor-plan {
+      background: #fdfdfc;
+      border: 2px dashed #d1d5db;
+      border-radius: var(--radius-md);
+      padding: 1.8rem;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.2rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .seat-box {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 110px;
+      position: relative;
+    }
+
+    .seat-box:hover {
+      transform: scale(1.03);
+      box-shadow: var(--shadow-md);
+    }
+
+    .seat-box.state-free {
+      border-color: var(--seat-free);
+      background: #f0fdf4;
+    }
+    .seat-box.state-busy {
+      border-color: #cbd5e1;
+      background: #f8fafc;
+      opacity: 0.75;
+      cursor: not-allowed;
+    }
+    .seat-box.state-hold {
+      border-color: var(--seat-hold);
+      background: #fffbeb;
+    }
+
+    .seat-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .seat-id {
+      font-weight: 800;
+      font-size: 1rem;
+      color: var(--text);
+    }
+
+    .seat-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+    .state-free .seat-badge { background: var(--seat-free-bg); color: var(--seat-free); }
+    .state-busy .seat-badge { background: #e2e8f0; color: #64748b; }
+    .state-hold .seat-badge { background: var(--seat-hold-bg); color: #b45309; }
+
+    .seat-meta {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .seat-features {
+      display: flex;
+      gap: 0.4rem;
+      margin-top: 0.4rem;
+      font-size: 0.75rem;
+    }
+    .tag-outlet {
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .tag-window {
+      background: #e0e7ff;
+      color: #3730a3;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    /* Modal / Popup for Seat Action */
+    .seat-action-box {
+      background: var(--surface-sub);
+      border-radius: var(--radius-md);
+      padding: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .seat-info-selected {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .selected-title {
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: var(--text);
+    }
+
+    /* TAB 2: Stamp Card */
+    .stamp-container {
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .stamp-card-board {
+      background: linear-gradient(135deg, #2d6a4f, #1b4332);
+      color: #fff;
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 1.8rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stamp-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      padding-bottom: 0.8rem;
+    }
+
+    .stamp-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.8rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .stamp-slot {
+      aspect-ratio: 1;
+      background: rgba(255, 255, 255, 0.12);
+      border: 2px dashed rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      transition: var(--transition);
+      cursor: pointer;
+    }
+
+    .stamp-slot.stamped {
+      background: #f4a261;
+      border: 2px solid #fff;
+      color: #1b4332;
+      animation: stampPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes stampPop {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .stamp-reward-msg {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    /* TAB 3: Quick Menu / Pre-Order */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .menu-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: var(--surface);
+      transition: var(--transition);
+    }
+    .menu-card:hover {
+      box-shadow: var(--shadow-sm);
+      border-color: var(--primary);
+    }
+
+    .menu-emoji {
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .menu-name {
+      font-weight: 800;
+      font-size: 1.05rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .menu-price {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 0.95rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .menu-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      background: var(--primary-soft);
+      color: var(--primary);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      align-self: flex-start;
+    }
+
+    /* ==========================================================================
+       6. Customer Feedback Survey Section (고객 반응 설문 & 차트)
+       ========================================================================== */
+    .survey-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5rem;
+      align-items: start;
+    }
+
+    .survey-form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2.2rem;
+      box-shadow: var(--shadow-md);
+    }
+
+    .form-group {
+      margin-bottom: 1.6rem;
+    }
+
+    .form-label {
+      display: block;
+      font-weight: 800;
+      font-size: 1rem;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .form-sub-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: -0.4rem;
+      margin-bottom: 0.6rem;
+      display: block;
+    }
+
+    .radio-pill-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .radio-custom-label {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.75rem 1rem;
+      background: var(--surface-sub);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.92rem;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+
+    .radio-custom-label:hover {
+      background: #f0fdf4;
+      border-color: var(--primary-light);
+    }
+
+    .radio-custom-label input[type="radio"] {
+      accent-color: var(--primary);
+      width: 17px;
+      height: 17px;
+    }
+
+    .form-textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.85rem;
+      font-size: 0.92rem;
+      min-height: 90px;
+      resize: vertical;
+      transition: var(--transition);
+      background: var(--surface-sub);
+    }
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #fff;
+    }
+
+    /* Survey Results Display */
+    .survey-results-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2.2rem;
+      box-shadow: var(--shadow-md);
+    }
+
+    .chart-block {
+      margin-bottom: 1.8rem;
+    }
+
+    .chart-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .bar-row {
+      margin-bottom: 0.75rem;
+    }
+
+    .bar-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .bar-track {
+      background: var(--surface-sub);
+      height: 14px;
+      border-radius: 999px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .bar-primary { background: var(--primary); }
+    .bar-accent { background: var(--accent); }
+    .bar-yellow { background: var(--yellow); }
+    .bar-gray { background: #94a3b8; }
+
+    .live-feedback-feed {
+      margin-top: 1.5rem;
+      border-top: 1px dashed var(--border);
+      padding-top: 1rem;
+    }
+
+    .feedback-bubble {
+      background: var(--surface-sub);
+      padding: 0.7rem 0.9rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      color: #374151;
+      margin-bottom: 0.5rem;
+      border-left: 3px solid var(--accent);
+    }
+
+    /* ==========================================================================
+       7. Marketing Strategy Section (마케팅)
+       ========================================================================== */
+    .marketing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.6rem;
+    }
+
+    .market-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 2rem 1.6rem;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+
+    .market-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary);
+    }
+
+    .market-tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--primary);
+      background: var(--primary-soft);
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      align-self: flex-start;
+    }
+
+    .market-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 0.8rem;
+    }
+
+    .market-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    .market-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      line-height: 1.5;
+    }
+
+    .market-list li strong {
+      color: var(--text);
+    }
+
+    .market-list li span.bullet {
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    /* ==========================================================================
+       8. Location & Operating Hours Section (오시는 길 & 영업시간)
+       ========================================================================== */
+    .location-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: stretch;
+    }
+
+    .location-info-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2.2rem;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .info-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .info-group h4 {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .info-group p {
+      font-size: 0.95rem;
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .exam-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: #fee2e2;
+      color: #991b1b;
+      font-weight: 800;
+      font-size: 0.78rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      margin-left: 0.4rem;
+    }
+
+    .map-visual-card {
+      background: #edf2f7;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      min-height: 380px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .map-graphic {
+      width: 100%;
+      max-width: 380px;
+      height: 220px;
+      background: #ffffff;
+      border-radius: var(--radius-md);
+      border: 2px solid var(--border-dark);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 1.2rem;
+    }
+
+    .map-road-h {
+      position: absolute;
+      width: 100%;
+      height: 28px;
+      background: #e2e8f0;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .map-road-v {
+      position: absolute;
+      height: 100%;
+      width: 28px;
+      background: #e2e8f0;
+      left: 38%;
+    }
+
+    .map-pin {
+      position: absolute;
+      top: 36%;
+      left: 55%;
+      background: var(--accent);
+      color: #fff;
+      padding: 0.4rem 0.8rem;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.78rem;
+      box-shadow: 0 4px 10px rgba(231, 111, 81, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      z-index: 2;
+      animation: floatPin 2.5s ease-in-out infinite;
+    }
+
+    @keyframes floatPin {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    .map-campus-gate {
+      position: absolute;
+      bottom: 18%;
+      left: 12%;
+      background: var(--primary);
+      color: #fff;
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 0.72rem;
+      z-index: 2;
+    }
+
+    /* Footer */
+    footer {
+      background: #111827;
+      color: #9ca3af;
+      padding: 3.5rem 0 2.5rem;
+      font-size: 0.88rem;
+      border-top: 1px solid #1f2937;
+    }
+
+    .footer-grid {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .footer-brand {
+      max-width: 380px;
+    }
+
+    .footer-brand h3 {
+      color: #ffffff;
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-credit {
+      text-align: center;
+      padding-top: 2rem;
+      border-top: 1px solid #1f2937;
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    /* Toast Notification */
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #111827;
+      color: #ffffff;
+      padding: 0.9rem 1.4rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      gap: 0.6rem;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Responsive Queries */
+    @media (max-width: 960px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+      }
+      .problems-grid {
+        grid-template-columns: 1fr;
+      }
+      .solutions-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .survey-grid {
+        grid-template-columns: 1fr;
+      }
+      .marketing-grid {
+        grid-template-columns: 1fr;
+      }
+      .location-grid {
+        grid-template-columns: 1fr;
+      }
+      .floor-plan {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .hero-title {
+        font-size: 2.1rem;
+      }
+      .section-title {
+        font-size: 1.6rem;
+      }
+      .solutions-grid {
+        grid-template-columns: 1fr;
+      }
+      .floor-plan {
+        grid-template-columns: 1fr;
+      }
+      .menu-grid {
+        grid-template-columns: 1fr;
+      }
+      .compare-summary-cards {
+        grid-template-columns: 1fr;
+      }
+      .stamp-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.4rem;
+      }
+      .stamp-slot {
+        font-size: 1rem;
+      }
+    }
+  </style>
 </head>
 <body>
-  <header class="site-header">
-    <a class="logo" href="#top">여백 로스터스</a>
-    <nav>
-      <a href="#beans">원두</a>
-      <a href="#visit">오시는 길</a>
-    </nav>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-inner">
+      <a href="#" class="brand">
+        <span class="brand-icon">☕</span>
+        <span>자리있슈 <small style="font-size:0.75rem; color:var(--accent); font-weight:700;">@모퉁이커피</small></span>
+      </a>
+      <nav class="nav-menu">
+        <a href="#problem" class="nav-link">문제 정의</a>
+        <a href="#solution" class="nav-link">해결 방법</a>
+        <a href="#compare" class="nav-link">서비스 비교</a>
+        <a href="#prototype" class="nav-link">프로토타입 체험</a>
+        <a href="#survey" class="nav-link">고객 반응 설문</a>
+        <a href="#marketing" class="nav-link">마케팅 전략</a>
+        <a href="#location" class="nav-link">오시는 길</a>
+        <a href="#prototype" class="nav-cta">실시간 자리보기</a>
+      </nav>
+    </div>
   </header>
 
-  <main id="top">
-    <section class="hero">
-      <h1>같은 콩,<br>볶는 만큼 다른 맛.</h1>
-      <p class="lead">슬라이더를 움직여 로스팅 단계에 따른 맛의 차이를 확인해 보세요.</p>
+  <!-- ========================================================================
+       1. Hero Section (히어로)
+       ======================================================================== -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-content">
+          <div class="hero-capstone-tag">
+            🎓 2026 교양캡스톤디자인 프로젝트 | 캠퍼스 라이프 혁신 과제
+          </div>
+          <h1 class="hero-title">
+            시험 기간, <span class="highlight">헛걸음 없는</span><br>
+            캠퍼스 앞 카페 실시간 좌석 서비스
+          </h1>
+          <p class="hero-desc">
+            가방 메고 자리 찾아 30분씩 헤매던 카공족 대학생을 위해 탄생했습니다.<br>
+            도착 전 <strong>실시간 빈자리 확인</strong>부터 <strong>콘센트석 필터링</strong>, <strong>15분 찜하기</strong>까지 한 손으로 해결하세요.
+          </p>
 
-      <div class="roast">
-        <label for="roast-range" class="roast-label">로스팅 단계</label>
-        <input type="range" id="roast-range" min="0" max="4" step="1" value="1">
-        <div class="roast-scale" aria-hidden="true">
-          <span>약배전</span><span>중배전</span><span>강배전</span>
+          <div class="hero-actions">
+            <a href="#prototype" class="btn btn-primary">
+              ⚡ 프로토타입 바로 체험하기
+            </a>
+            <a href="#survey" class="btn btn-outline">
+              📝 학생 의견 남기고 커피 받기
+            </a>
+          </div>
+
+          <div class="hero-proof">
+            <div class="proof-item">
+              <span class="proof-num">89.2%</span>
+              <span class="proof-label">시험기간 카페 헛걸음 경험</span>
+            </div>
+            <div class="proof-item">
+              <span class="proof-num">22.4분</span>
+              <span class="proof-label">평균 빈자리 탐색 소요 시간</span>
+            </div>
+            <div class="proof-item">
+              <span class="proof-num">1분 미만</span>
+              <span class="proof-label">실시간 좌석 정보 갱신 주기</span>
+            </div>
+          </div>
         </div>
-        <div class="roast-result" aria-live="polite">
-          <h2 id="roast-name"></h2>
-          <p id="roast-notes"></p>
+
+        <!-- Hero Preview Widget (Live Card Preview) -->
+        <div class="hero-widget">
+          <div class="widget-header">
+            <div>
+              <div class="widget-cafe-name">모퉁이 커피 (캠퍼스 본점)</div>
+              <div class="widget-cafe-sub">정문 도보 2분 거리 · 콘센트 집중형 카페</div>
+            </div>
+            <div class="widget-badge">
+              ● LIVE
+            </div>
+          </div>
+
+          <div class="widget-status-banner">
+            <div class="status-left">
+              <h4>현재 이용 가능 좌석</h4>
+              <div class="count"><span id="hero-free-count">8</span>석 <small style="font-size:0.9rem; font-weight:500; color:var(--text-muted);">/ 전체 24석</small></div>
+            </div>
+            <div style="text-align: right;">
+              <span style="display:inline-block; font-size:0.8rem; font-weight:700; color:#10b981; background:#d1fae5; padding:0.2rem 0.6rem; border-radius:999px;">
+                여유 있음
+              </span>
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.3rem;">방금 전 자동 갱신</div>
+            </div>
+          </div>
+
+          <div class="widget-quick-stats">
+            <div class="stat-box">
+              <div class="val" style="color:var(--primary);">🔌 3석</div>
+              <div class="desc">콘센트 1인석</div>
+            </div>
+            <div class="stat-box">
+              <div class="val" style="color:var(--accent);">🪟 2석</div>
+              <div class="desc">창가 뷰 명당</div>
+            </div>
+            <div class="stat-box">
+              <div class="val" style="color:var(--yellow);">🔉 48 dB</div>
+              <div class="desc">조용한 백색소음</div>
+            </div>
+          </div>
+
+          <div class="widget-notify-pill">
+            💡 <strong>시험기간 알림:</strong> 현재 2층 집중 스터디존에 잔여석이 있습니다!
+          </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section id="beans" class="beans">
-      <h2>이번 달 원두</h2>
-      <ul class="bean-list">
-        <li>
-          <div>
-            <h3>에티오피아 구지</h3>
-            <p>복숭아, 재스민, 밝은 산미</p>
-          </div>
-          <span class="price">200g 16,000원</span>
-        </li>
-        <li>
-          <div>
-            <h3>콜롬비아 우일라</h3>
-            <p>카라멜, 오렌지, 균형 잡힌 단맛</p>
-          </div>
-          <span class="price">200g 14,000원</span>
-        </li>
-        <li>
-          <div>
-            <h3>여백 블렌드</h3>
-            <p>다크 초콜릿, 견과류, 묵직한 바디</p>
-          </div>
-          <span class="price">200g 12,000원</span>
-        </li>
-      </ul>
-      <p class="note">주문 후 볶기 때문에 발송까지 2~3일 걸립니다.</p>
-    </section>
+  <!-- ========================================================================
+       2. Problem Definition Section (문제 정의)
+       ======================================================================== -->
+  <section class="section section-alt" id="problem">
+    <div class="container">
+      <div class="text-center">
+        <span class="section-badge">PROBLEM DEFINITION</span>
+        <h2 class="section-title">캠퍼스 앞 카공족이 겪는 3가지 진짜 불편</h2>
+        <p class="section-desc">
+          중간·기말고사 기간 대학생 120명을 대상으로 진행한 심층 인터뷰와 현장 설문조사에서 도출된 핵심 페인 포인트(Pain Points)입니다.
+        </p>
+      </div>
 
-    <section id="visit" class="visit">
-      <h2>오시는 길</h2>
-      <dl>
-        <dt>주소</dt><dd>서울특별시 마포구 예시로 12길 3 (임의 주소)</dd>
-        <dt>영업시간</dt><dd>화–일 10:00–19:00, 월요일 휴무</dd>
-        <dt>문의</dt><dd>hello@example.com</dd>
-      </dl>
-    </section>
-  </main>
+      <div class="problems-grid">
+        <!-- Problem 1 -->
+        <div class="problem-card">
+          <div class="problem-icon-wrap">🚶‍♂️</div>
+          <span class="problem-tag">Pain Point 01</span>
+          <h3 class="problem-title">헛걸음과 시간 낭비의 악순환</h3>
+          <div class="problem-quote">
+            "무거운 노트북 가방 들고 카페 세 군데를 돌았는데 전부 만석이더라고요. 결국 공부 시작도 못 하고 길에서 30분을 날렸어요."
+            <span class="problem-interviewee">— 경영학과 3학년 김OO 학생</span>
+          </div>
+          <div class="problem-stat">
+            응답자의 <strong>89.2%</strong>가 시험기간 자리 부족으로 다른 카페로 이동한 경험이 있다고 응답했습니다.
+          </div>
+        </div>
 
+        <!-- Problem 2 -->
+        <div class="problem-card">
+          <div class="problem-icon-wrap">🔌</div>
+          <span class="problem-tag">Pain Point 02</span>
+          <h3 class="problem-title">콘센트 & 좌석 조건의 불확실성</h3>
+          <div class="problem-quote">
+            "겨우 빈자리를 찾아서 음료를 시켰는데, 콘센트가 없는 4인석이라 노트북 배터리가 닳아서 1시간 만에 나와야 했습니다."
+            <span class="problem-interviewee">— 컴퓨터공학과 2학년 박OO 학생</span>
+          </div>
+          <div class="problem-stat">
+            대학생 <strong>76.4%</strong>가 '충전 가능한 콘센트 유무'를 카페 선택의 1순위 조건으로 꼽았습니다.
+          </div>
+        </div>
+
+        <!-- Problem 3 -->
+        <div class="problem-card">
+          <div class="problem-icon-wrap">👀</div>
+          <span class="problem-tag">Pain Point 03</span>
+          <h3 class="problem-title">매장 분위기 & 소음도 예측 불가</h3>
+          <div class="problem-quote">
+            "카공하기 좋은 차분한 분위기인지, 단체 손님으로 시끌벅적한지 매장 문을 열고 들어가기 전까지는 전혀 알 수가 없어요."
+            <span class="problem-interviewee">— 미디어커뮤니케이션학과 4학년 이OO 학생</span>
+          </div>
+          <div class="problem-stat">
+            응답자의 <strong>68.5%</strong>가 매장 내부 소음과 조별과제 분위기 파악이 미리 필요하다고 답했습니다.
+          </div>
+        </div>
+      </div>
+
+      <!-- Problem Data Banner -->
+      <div class="problem-banner">
+        <div class="banner-text">
+          <h3>"왜 대학생들은 매번 카페 문앞에서 발길을 돌려야 할까요?"</h3>
+          <p>정보의 비대칭으로 인해 학생은 시간을 낭비하고, 카페 사장님은 특정 시간대 회전율 예측에 실패합니다.</p>
+        </div>
+        <div class="banner-stat-box">
+          <div>
+            <div class="stat-pill-num">22.4분</div>
+            <div class="stat-pill-label">시험기간 평균 탐색 낭비 시간</div>
+          </div>
+          <div>
+            <div class="stat-pill-num">91.6%</div>
+            <div class="stat-pill-label">실시간 좌석 서비스 도입 필요성</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       3. Solution Section (해결 방법)
+       ======================================================================== -->
+  <section class="section" id="solution">
+    <div class="container">
+      <div class="text-center">
+        <span class="section-badge">OUR SOLUTION</span>
+        <h2 class="section-title">디지털 기술로 구현한 4가지 핵심 솔루션</h2>
+        <p class="section-desc">
+          초음파 좌석 센서 및 가벼운 점유 확인 시스템을 결합하여, 대학생과 동네 카페를 스마트하게 연결합니다.
+        </p>
+      </div>
+
+      <div class="solutions-grid">
+        <!-- Feature 1 -->
+        <div class="solution-card">
+          <span class="solution-num">01</span>
+          <div class="solution-icon">🗺️</div>
+          <h3 class="solution-title">실시간 좌석 배치도</h3>
+          <p class="solution-desc">
+            1분 단위로 자동 갱신되는 평면도 맵을 통해 어떤 자리가 비어 있는지 색상으로 한눈에 파악할 수 있습니다.
+          </p>
+          <span class="solution-chip">IoT 센서 & POS 자동 연동</span>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="solution-card">
+          <span class="solution-num">02</span>
+          <div class="solution-icon">⚡</div>
+          <h3 class="solution-title">맞춤형 좌석 필터링</h3>
+          <p class="solution-desc">
+            노트북 충전용 '콘센트석', 햇살 좋은 '창가석', '조용한 스터디존' 등 내가 원하는 조건의 좌석만 골라봅니다.
+          </p>
+          <span class="solution-chip">필터 즉시 적용</span>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="solution-card">
+          <span class="solution-num">03</span>
+          <div class="solution-icon">⏳</div>
+          <h3 class="solution-title">도착 전 15분 찜하기</h3>
+          <p class="solution-desc">
+            강의실을 나설 때 원하는 자리를 15분간 선점하고 음료를 선주문하면, 도착하자마자 대기 없이 바로 착석합니다.
+          </p>
+          <span class="solution-chip">노쇼 방지 보증금제</span>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="solution-card">
+          <span class="solution-num">04</span>
+          <div class="solution-icon">📊</div>
+          <h3 class="solution-title">소음도 & 혼잡 인덱스</h3>
+          <p class="solution-desc">
+            매장 내 실시간 데시벨(dB) 수준을 잔잔함 / 대화 중 / 활발함 3단계로 제공하여 공부 집중 환경을 미리 검증합니다.
+          </p>
+          <span class="solution-chip">스마트 음향 센싱</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       4. Competitor Comparison Section (유사 서비스 비교표)
+       ======================================================================== -->
+  <section class="section section-alt" id="compare">
+    <div class="container">
+      <div class="text-center">
+        <span class="section-badge">COMPETITIVE ADVANTAGE</span>
+        <h2 class="section-title">기존 유사 서비스와의 차별성</h2>
+        <p class="section-desc">
+          지도 앱이나 대형 프랜차이즈 오더 앱이 해결해주지 못했던 '개인 카페의 실시간 좌석 현황'을 완벽하게 보완합니다.
+        </p>
+      </div>
+
+      <div class="table-container">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th style="width: 25%;">비교 항목</th>
+              <th style="width: 25%;">포털 지도 앱<br><small style="font-weight:normal; color:var(--text-muted);">(네이버/카카오 지도)</small></th>
+              <th style="width: 25%;">대형 프랜차이즈 앱<br><small style="font-weight:normal; color:var(--text-muted);">(스타벅스 사이렌오더 등)</small></th>
+              <th class="highlight-col" style="width: 25%;">우리 서비스<br><strong>자리있슈 (Zari-Issue)</strong></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="feature-name">실시간 개별 좌석 현황</td>
+              <td><span class="check-no">✕</span><br><small style="color:var(--text-muted);">혼잡도 추정치만 제공</small></td>
+              <td><span class="check-no">✕</span><br><small style="color:var(--text-muted);">주문 대기열만 안내</small></td>
+              <td class="highlight-col"><span class="check-yes">● 완벽 지원</span><br><small style="font-weight:700; color:var(--primary);">좌석 번호별 실시간 맵</small></td>
+            </tr>
+            <tr>
+              <td class="feature-name">콘센트 / 창가 자리 필터</td>
+              <td><span class="check-no">✕</span><br><small style="color:var(--text-muted);">매장 단위 편의시설만 표기</small></td>
+              <td><span class="check-no">✕</span><br><small style="color:var(--text-muted);">미지원</small></td>
+              <td class="highlight-col"><span class="check-yes">● 완벽 지원</span><br><small style="font-weight:700; color:var(--primary);">자리별 콘센트 위치 안내</small></td>
+            </tr>
+            <tr>
+              <td class="feature-name">도착 전 15분 선점 (찜하기)</td>
+              <td><span class="check-no">✕</span><br><small style="color:var(--text-muted);">불가</small></td>
+              <td><span class="check-no">✕</span><br><small style="color:var(--text-muted);">음료 제조만 선주문</small></td>
+              <td class="highlight-col"><span class="check-yes">● 특화 기능</span><br><small style="font-weight:700; color:var(--primary);">도착 전 임시 자리 확보</small></td>
+            </tr>
+            <tr>
+              <td class="feature-name">캠퍼스 소상공인 카페 연계</td>
+              <td><span class="check-partial">△</span><br><small style="color:var(--text-muted);">단순 상점 등록 수준</small></td>
+              <td><span class="check-no">✕</span><br><small style="color:var(--text-muted);">자사 직영점만 사용</small></td>
+              <td class="highlight-col"><span class="check-yes">● 최우선 타깃</span><br><small style="font-weight:700; color:var(--primary);">캠퍼스 앞 로컬 상생</small></td>
+            </tr>
+            <tr>
+              <td class="feature-name">실시간 매장 소음 지수(dB)</td>
+              <td><span class="check-no">✕</span><br><small style="color:var(--text-muted);">방문자 리뷰에 의존</small></td>
+              <td><span class="check-no">✕</span><br><small style="color:var(--text-muted);">미제공</small></td>
+              <td class="highlight-col"><span class="check-yes">● 독자 제공</span><br><small style="font-weight:700; color:var(--primary);">백색소음/분위기 수치화</small></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="compare-summary-cards">
+        <div class="comp-diff-card">
+          <h4>💡 왜 대형 플랫폼이 못 할까요?</h4>
+          <p>포털 지도는 광범위한 전국 단위라 대학가 골목의 작은 카페 좌석 센서 연동까지 커버하기 어렵습니다.</p>
+        </div>
+        <div class="comp-diff-card">
+          <h4>🎯 대학가 특화 버티컬 서비스</h4>
+          <p>캠퍼스 상권의 핵심 고객인 대학생의 '카공 니즈'에만 100% 집중하여 높은 고객 충성도를 만듭니다.</p>
+        </div>
+        <div class="comp-diff-card">
+          <h4>🤝 카페 사장님과의 윈윈(Win-Win)</h4>
+          <p>학생 유치 효과와 함께 피크 타임 좌석 회전율을 최적화하여 점주의 매출 증대를 직접 돕습니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       5. Interactive Prototype Section (프로토타입 체험)
+       ======================================================================== -->
+  <section class="section" id="prototype">
+    <div class="container">
+      <div class="text-center">
+        <span class="section-badge">INTERACTIVE PROTOTYPE</span>
+        <h2 class="section-title">직접 눌러보고 체험하는 실시간 프로토타입</h2>
+        <p class="section-desc">
+          실제 서비스의 핵심 기능을 인터랙티브하게 조작해 보세요. (좌석 현황 클릭, 모바일 스탬프 적립, 테이크아웃 선주문)
+        </p>
+      </div>
+
+      <div class="prototype-wrapper">
+        <!-- Prototype Navigation Tabs -->
+        <div class="proto-tabs">
+          <button class="proto-tab-btn active" onclick="switchProtoTab('seatmap')">
+            🪑 1. 실시간 좌석 현황판
+          </button>
+          <button class="proto-tab-btn" onclick="switchProtoTab('stamp')">
+            🎟️ 2. 학생 모바일 스탬프판
+          </button>
+          <button class="proto-tab-btn" onclick="switchProtoTab('order')">
+            ☕ 3. 도착 15분 전 빠른 선주문
+          </button>
+        </div>
+
+        <!-- TAB 1: Live Seat Map -->
+        <div class="proto-tab-content active" id="proto-tab-seatmap">
+          <div class="seat-toolbar">
+            <div class="filter-btn-group">
+              <button class="filter-pill active" onclick="filterSeats('all', this)">전체 좌석 (12)</button>
+              <button class="filter-pill" onclick="filterSeats('outlet', this)">🔌 콘센트 있는 자리</button>
+              <button class="filter-pill" onclick="filterSeats('window', this)">🪟 창가석 명당</button>
+              <button class="filter-pill" onclick="filterSeats('free', this)">🟢 이용 가능한 자리만</button>
+            </div>
+            <div class="seat-legend">
+              <span class="legend-item"><span class="legend-dot dot-free"></span> 이용 가능</span>
+              <span class="legend-item"><span class="legend-dot dot-busy"></span> 사용 중</span>
+              <span class="legend-item"><span class="legend-dot dot-hold"></span> 15분 선점 중</span>
+            </div>
+          </div>
+
+          <!-- Seat Floor Plan Layout -->
+          <div class="floor-plan" id="seat-grid">
+            <!-- Dynamically populated or static representation -->
+          </div>
+
+          <!-- Bottom Action Box for Selected Seat -->
+          <div class="seat-action-box" id="seat-action-box">
+            <div class="seat-info-selected">
+              <div style="font-size:2rem;" id="action-seat-icon">🪑</div>
+              <div>
+                <div class="selected-title" id="action-seat-title">좌석을 클릭하여 상태를 확인하세요</div>
+                <div style="font-size:0.85rem; color:var(--text-muted);" id="action-seat-desc">좌석을 선택하면 15분 찜하기 예약을 시뮬레이션할 수 있습니다.</div>
+              </div>
+            </div>
+            <div>
+              <button class="btn btn-primary" id="btn-reserve-seat" onclick="reserveSelectedSeat()" disabled>
+                ⏳ 선택 좌석 15분 찜하기
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: Stamp Card Simulator -->
+        <div class="proto-tab-content" id="proto-tab-stamp">
+          <div class="stamp-container">
+            <div class="stamp-card-board">
+              <div class="stamp-card-header">
+                <div>
+                  <h3 style="font-size:1.15rem; font-weight:800; color:#fff;">모퉁이 커피 열공 스탬프</h3>
+                  <p style="font-size:0.8rem; color:rgba(255,255,255,0.8);">대학생 전용 디지털 도장 쿠폰</p>
+                </div>
+                <div style="text-align:right;">
+                  <span style="font-size:1.1rem; font-weight:900; color:var(--yellow);" id="stamp-counter-text">3 / 10</span>
+                  <div style="font-size:0.75rem; color:rgba(255,255,255,0.7);">7개 남음</div>
+                </div>
+              </div>
+
+              <!-- 10 Stamp Slots -->
+              <div class="stamp-grid" id="stamp-grid">
+                <!-- 10 slots populated by JS -->
+              </div>
+
+              <div class="stamp-reward-msg" id="stamp-reward-msg">
+                🎁 10개 달성 시: <strong>모든 제조 음료 1잔 무료 쿠폰</strong> 자동 발급!
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:center; gap:0.8rem; flex-wrap:wrap;">
+              <button class="btn btn-primary" onclick="addSingleStamp()">
+                ✨ 도장 1개 쾅! 찍어보기
+              </button>
+              <button class="btn btn-outline" onclick="resetStamps()">
+                🔄 스탬프 초기화
+              </button>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.8rem;">
+              * 학생증 인증 시 방문할 때마다 스탬프가 앱으로 자동 적립됩니다.
+            </p>
+          </div>
+        </div>
+
+        <!-- TAB 3: Pre-Order Simulator -->
+        <div class="proto-tab-content" id="proto-tab-order">
+          <div style="margin-bottom:1.2rem; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <h3 style="font-weight:800; font-size:1.15rem;">☕ 자리 찜과 함께 음료 선주문하기</h3>
+              <p style="font-size:0.85rem; color:var(--text-muted);">도착하기 15분 전 미리 픽업 요청하여 카운터 대기 시간을 0분으로 만듭니다.</p>
+            </div>
+            <div style="font-weight:800; color:var(--primary); font-size:0.95rem;">
+              장바구니 합계: <span id="cart-total-price">0</span>원
+            </div>
+          </div>
+
+          <div class="menu-grid">
+            <div class="menu-card">
+              <div>
+                <span class="menu-badge">인기 No.1</span>
+                <div class="menu-emoji">☕</div>
+                <div class="menu-name">시그니처 모퉁이 아메리카노</div>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.5rem;">산미 없는 고소하고 진한 다크 로스팅</div>
+              </div>
+              <div>
+                <div class="menu-price">3,500원 <small style="text-decoration:line-through; color:#9ca3af;">4,000원</small></div>
+                <button class="btn btn-outline" style="width:100%; padding:0.5rem;" onclick="addToCart('아메리카노', 3500)">
+                  + 담기
+                </button>
+              </div>
+            </div>
+
+            <div class="menu-card">
+              <div>
+                <span class="menu-badge">열공 집중용</span>
+                <div class="menu-emoji">🥛</div>
+                <div class="menu-name">모퉁이 딥 바닐라 빈 라떼</div>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.5rem;">마다가스카르 천연 바닐라빈 듬뿍</div>
+              </div>
+              <div>
+                <div class="menu-price">4,500원 <small style="text-decoration:line-through; color:#9ca3af;">5,000원</small></div>
+                <button class="btn btn-outline" style="width:100%; padding:0.5rem;" onclick="addToCart('바닐라 라떼', 4500)">
+                  + 담기
+                </button>
+              </div>
+            </div>
+
+            <div class="menu-card">
+              <div>
+                <span class="menu-badge">디저트 추천</span>
+                <div class="menu-emoji">🧇</div>
+                <div class="menu-name">바질 페스토 크로플</div>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.5rem;">공부하다 출출할 때 든든한 프랑스 크로플</div>
+              </div>
+              <div>
+                <div class="menu-price">4,800원</div>
+                <button class="btn btn-outline" style="width:100%; padding:0.5rem;" onclick="addToCart('크로플', 4800)">
+                  + 담기
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:var(--surface-sub); border-radius:var(--radius-sm); padding:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.8rem;">
+            <div style="font-size:0.88rem;" id="cart-items-summary">
+              담긴 메뉴: 선택된 메뉴가 없습니다.
+            </div>
+            <button class="btn btn-primary" onclick="simulateOrderCheckout()">
+              🚀 좌석과 함께 15분 선주문 확정하기
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       6. Customer Feedback Survey Section (고객 반응 설문)
+       ======================================================================== -->
+  <section class="section section-alt" id="survey">
+    <div class="container">
+      <div class="text-center">
+        <span class="section-badge">CUSTOMER FEEDBACK SURVEY</span>
+        <h2 class="section-title">학우 여러분의 솔직한 반응을 들려주세요</h2>
+        <p class="section-desc">
+          캡스톤디자인 실증 검증 단계입니다. 투표 즉시 다른 학생들의 응답 통계 그래프가 실시간으로 갱신됩니다!
+        </p>
+      </div>
+
+      <div class="survey-grid">
+        <!-- Survey Form -->
+        <div class="survey-form-card">
+          <h3 style="font-size:1.25rem; font-weight:800; margin-bottom:1.2rem; color:var(--text);">
+            📋 서비스 도입 사전 검증 설문
+          </h3>
+
+          <form id="feedback-form" onsubmit="handleSurveySubmit(event)">
+            <!-- Question 1 -->
+            <div class="form-group">
+              <label class="form-label">
+                Q1. 이번 학기 시험 기간에 이 '실시간 좌석 확인 서비스'가 런칭된다면 이용하실 의향이 있으신가요?
+              </label>
+              <div class="radio-pill-group">
+                <label class="radio-custom-label">
+                  <input type="radio" name="q1" value="very_high" required checked>
+                  <span>매우 이용하고 싶다 (무조건 쓸 것 같다)</span>
+                </label>
+                <label class="radio-custom-label">
+                  <input type="radio" name="q1" value="moderate">
+                  <span>상황에 따라 가끔 이용할 것 같다</span>
+                </label>
+                <label class="radio-custom-label">
+                  <input type="radio" name="q1" value="low">
+                  <span>별로 이용할 생각이 없다</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="form-group">
+              <label class="form-label">
+                Q2. 서비스의 기능 중 가장 매력적이고 유용하다고 생각되는 것은 무엇인가요?
+              </label>
+              <div class="radio-pill-group">
+                <label class="radio-custom-label">
+                  <input type="radio" name="q2" value="seat_outlet" required checked>
+                  <span>콘센트 유무가 표시되는 실시간 좌석 지도</span>
+                </label>
+                <label class="radio-custom-label">
+                  <input type="radio" name="q2" value="reserve_15m">
+                  <span>강의 끝나고 이동하며 자리 찜하는 15분 선점제</span>
+                </label>
+                <label class="radio-custom-label">
+                  <input type="radio" name="q2" value="noise_level">
+                  <span>매장 내 실시간 소음도 & 카공 분위기 확인</span>
+                </label>
+                <label class="radio-custom-label">
+                  <input type="radio" name="q2" value="stamp_discount">
+                  <span>대학생 전용 모바일 스탬프 및 할인 혜택</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Question 3 (Open Feedback) -->
+            <div class="form-group">
+              <label class="form-label" for="user-comment">
+                Q3. 추가되었으면 하는 기능이나 서비스에 바라는 점을 남겨주세요.
+              </label>
+              <span class="form-sub-label">작성해주신 소중한 의견은 캡스톤 최종 발표 보고서에 반영됩니다.</span>
+              <textarea id="user-comment" class="form-textarea" placeholder="예: 빈자리 생기면 카톡 알림톡 보내주는 기능이 있으면 좋겠어요!" required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width:100%; padding:0.95rem;">
+              제출하고 실시간 응답 통계 확인하기 📊
+            </button>
+          </form>
+        </div>
+
+        <!-- Live Graph / Results Card -->
+        <div class="survey-results-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+            <div>
+              <h3 style="font-size:1.2rem; font-weight:800; color:var(--text);">실시간 고객 반응 통계</h3>
+              <p style="font-size:0.8rem; color:var(--text-muted);">총 참여자 수: <strong id="total-votes-count" style="color:var(--primary);">124</strong>명</p>
+            </div>
+            <span style="font-size:0.75rem; background:var(--primary-soft); color:var(--primary); padding:0.25rem 0.6rem; border-radius:999px; font-weight:800;">
+              실시간 반영 중
+            </span>
+          </div>
+
+          <!-- Chart 1: Q1 Intent to Use -->
+          <div class="chart-block">
+            <div class="chart-title">
+              <span>Q1. 서비스 이용 의향</span>
+              <span style="font-size:0.8rem; color:var(--primary); font-weight:700;">긍정 92%</span>
+            </div>
+
+            <div class="bar-row">
+              <div class="bar-meta">
+                <span>매우 이용하고 싶다</span>
+                <span id="q1-val-very">78% (97명)</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill bar-primary" id="q1-bar-very" style="width: 78%;"></div>
+              </div>
+            </div>
+
+            <div class="bar-row">
+              <div class="bar-meta">
+                <span>상황에 따라 가끔 이용</span>
+                <span id="q1-val-mod">17% (21명)</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill bar-yellow" id="q1-bar-mod" style="width: 17%;"></div>
+              </div>
+            </div>
+
+            <div class="bar-row">
+              <div class="bar-meta">
+                <span>이용 의향 없음</span>
+                <span id="q1-val-low">5% (6명)</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill bar-gray" id="q1-bar-low" style="width: 5%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart 2: Q2 Most Attractive Feature -->
+          <div class="chart-block">
+            <div class="chart-title">
+              <span>Q2. 가장 선호하는 핵심 기능</span>
+            </div>
+
+            <div class="bar-row">
+              <div class="bar-meta">
+                <span>실시간 콘센트 좌석 확인</span>
+                <span id="q2-val-outlet">46% (57명)</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill bar-accent" id="q2-bar-outlet" style="width: 46%;"></div>
+              </div>
+            </div>
+
+            <div class="bar-row">
+              <div class="bar-meta">
+                <span>15분 선점 찜하기</span>
+                <span id="q2-val-reserve">28% (35명)</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill bar-primary" id="q2-bar-reserve" style="width: 28%;"></div>
+              </div>
+            </div>
+
+            <div class="bar-row">
+              <div class="bar-meta">
+                <span>매장 소음도(dB) 파악</span>
+                <span id="q2-val-noise">15% (18명)</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill bar-yellow" id="q2-bar-noise" style="width: 15%;"></div>
+              </div>
+            </div>
+
+            <div class="bar-row">
+              <div class="bar-meta">
+                <span>학생증 스탬프 혜택</span>
+                <span id="q2-val-stamp">11% (14명)</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill bar-gray" id="q2-bar-stamp" style="width: 11%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Comments Feed -->
+          <div class="live-feedback-feed">
+            <div style="font-size:0.85rem; font-weight:800; margin-bottom:0.6rem; color:var(--text);">
+              💬 최근 남겨진 학생 의견
+            </div>
+            <div id="recent-comments-container">
+              <div class="feedback-bubble">
+                "진짜 시험기간마다 자리 없어서 길바닥에서 방황했는데 꼭 런칭되었으면 좋겠습니다!"
+              </div>
+              <div class="feedback-bubble">
+                "도착 전 15분 선점 기능이 제일 혁신적이네요. 헛걸음 확실히 없어질 듯."
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       7. Marketing Strategy Section (마케팅 전략)
+       ======================================================================== -->
+  <section class="section" id="marketing">
+    <div class="container">
+      <div class="text-center">
+        <span class="section-badge">GO-TO-MARKET STRATEGY</span>
+        <h2 class="section-title">타깃 고객 및 런칭 마케팅 전략</h2>
+        <p class="section-desc">
+          캡스톤 수업의 디지털 서비스 기획에 기반한 구체적인 고객 페르소나, 홍보 채널, 프로모션 로드맵입니다.
+        </p>
+      </div>
+
+      <div class="marketing-grid">
+        <!-- Card 1: Target Customer -->
+        <div class="market-card">
+          <span class="market-tag">TARGET PERSONA</span>
+          <h3 class="market-title">타깃 고객 정의</h3>
+          <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1rem;">
+            대학생의 카공 패턴에 맞춘 2단계 타깃팅
+          </p>
+          <ul class="market-list">
+            <li>
+              <span class="bullet">▶</span>
+              <div>
+                <strong>핵심 타깃 (Primary):</strong><br>
+                시험기간 벼락치기 및 팀플 과제가 집중되는 대학가 재학생 (1~4학년 카공족)
+              </div>
+            </li>
+            <li>
+              <span class="bullet">▶</span>
+              <div>
+                <strong>확장 타깃 (Secondary):</strong><br>
+                노트북 충전과 조용한 작업 공간이 필요한 인근 취준생 및 원격 프리랜서
+              </div>
+            </li>
+            <li>
+              <span class="bullet">▶</span>
+              <div>
+                <strong>B2B 파트너 (Partners):</strong><br>
+                비수기 시간대 회전율을 끌어올리고 단골 학생을 확보하려는 캠퍼스 앞 개인 카페 점주
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Card 2: Promotion Channels -->
+        <div class="market-card">
+          <span class="market-tag">ACQUISITION CHANNELS</span>
+          <h3 class="market-title">홍보 채널 전략</h3>
+          <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1rem;">
+            학생들이 매일 접속하는 온·오프라인 접점 집중 공략
+          </p>
+          <ul class="market-list">
+            <li>
+              <span class="bullet">📱</span>
+              <div>
+                <strong>에브리타임 (Everytime) 바이럴:</strong><br>
+                '시험기간 헛걸음 안 하는 꿀팁', '캠퍼스 앞 콘센트 카페 지도' 유용 정보글 업로드
+              </div>
+            </li>
+            <li>
+              <span class="bullet">🤝</span>
+              <div>
+                <strong>단과대 학생회 공식 제휴:</strong><br>
+                중간·기말고사 야식행사 및 시험 응원 부스에 '자리있슈 쿠폰' 번들 배포
+              </div>
+            </li>
+            <li>
+              <span class="bullet">🎬</span>
+              <div>
+                <strong>인스타그램 릴스 / 쇼츠:</strong><br>
+                '카페 3바퀴 돌고 멘붕 온 카공족 공감 숏폼' 제작 및 대학생 타깃 인근 스폰서 광고
+              </div>
+            </li>
+            <li>
+              <span class="bullet">📍</span>
+              <div>
+                <strong>오프라인 QR 입간판:</strong><br>
+                캠퍼스 정문 및 제휴 카페 출입문에 "지금 자리 있나요? QR 찍고 확인" 안내판 비치
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Card 3: Launch Events -->
+        <div class="market-card">
+          <span class="market-tag">PROMOTIONS & EVENTS</span>
+          <h3 class="market-title">출시 프로모션 이벤트</h3>
+          <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1rem;">
+            초기 사용자 유입과 앱 바이럴을 유도하는 3대 런칭 캠페인
+          </p>
+          <ul class="market-list">
+            <li>
+              <span class="bullet">☕</span>
+              <div>
+                <strong>이벤트 1. 시험기간 첫 찜 1,000원 딜:</strong><br>
+                첫 15분 선점 예약 시 아메리카노 1,000원 구매 쿠폰 즉시 지급
+              </div>
+            </li>
+            <li>
+              <span class="bullet">👥</span>
+              <div>
+                <strong>이벤트 2. 친구 초대 '함께 카공' 챌린지:</strong><br>
+                친구에게 자리 링크 공유 후 동반 착석 시 둘 다 스탬프 2배 적립
+              </div>
+            </li>
+            <li>
+              <span class="bullet">🎁</span>
+              <div>
+                <strong>이벤트 3. 열공 출석왕 경품 페스타:</strong><br>
+                시험기간 2주간 최다 이용 학생에게 '기말고사 종강 장학금 및 에어팟' 추첨 증정
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       8. Location & Operating Hours Section (오시는 길과 영업시간)
+       ======================================================================== -->
+  <section class="section section-alt" id="location">
+    <div class="container">
+      <div class="text-center">
+        <span class="section-badge">LOCATION & HOURS</span>
+        <h2 class="section-title">오시는 길 & 매장 운영시간 안내</h2>
+        <p class="section-desc">
+          캠퍼스 정문에서 가장 가까운 모퉁이 카페로 오시는 길과 시험기간 연장 영업 일정을 확인하세요.
+        </p>
+      </div>
+
+      <div class="location-grid">
+        <!-- Location Detail Info -->
+        <div class="location-info-card">
+          <div>
+            <div class="info-group">
+              <h4>📍 매장 위치</h4>
+              <p>
+                <strong>모퉁이 커피 (Corner Coffee & Roasters) 캠퍼스 본점</strong><br>
+                서울시 성북구 안암로 145 모퉁이빌딩 1층<br>
+                <span style="color:var(--text-muted); font-size:0.88rem;">(대학 정문 1번 출구에서 횡단보도 건너 도보 2분 거리)</span>
+              </p>
+            </div>
+
+            <div class="info-group">
+              <h4>
+                ⏰ 영업시간 안내
+                <span class="exam-badge">시험기간 연장 운영 중</span>
+              </h4>
+              <p>
+                <strong>평상시 학기 중:</strong> 월 ~ 일 08:30 – 22:30<br>
+                <strong>중간·기말 시험기간 특별 운영:</strong> 매일 08:00 – <strong>익일 03:00</strong> (새벽 카공 집중 지원)<br>
+                <span style="color:var(--text-muted); font-size:0.85rem;">* 라스트 오더: 마감 30분 전까지</span>
+              </p>
+            </div>
+
+            <div class="info-group">
+              <h4>📶 매장 편의 시설</h4>
+              <p style="font-size:0.9rem;">
+                • 전 좌석의 85% 콘센트 완비 (초고속 충전 지원)<br>
+                • 기가 와이파이: <code>Corner_5G_Study</code> / PW: <code>studyhard1234</code><br>
+                • 남/녀 화장실 분리 및 쾌적한 공기청정 시스템 가동
+              </p>
+            </div>
+          </div>
+
+          <div style="padding-top:1.2rem; border-top:1px solid var(--border);">
+            <a href="#prototype" class="btn btn-primary" style="width:100%;">
+              🧭 지금 빈자리 확인하고 출발하기
+            </a>
+          </div>
+        </div>
+
+        <!-- Stylized Location Map Graphic -->
+        <div class="map-visual-card">
+          <div class="map-graphic">
+            <!-- Road Graphic -->
+            <div class="map-road-h"></div>
+            <div class="map-road-v"></div>
+
+            <!-- Campus Gate Indicator -->
+            <div class="map-campus-gate">
+              🎓 대학교 정문 (도보 2분)
+            </div>
+
+            <!-- Animated Store Pin -->
+            <div class="map-pin">
+              ☕ 모퉁이 커피 (도착지)
+            </div>
+          </div>
+
+          <div style="max-width:320px;">
+            <h4 style="font-weight:800; font-size:1.05rem; margin-bottom:0.3rem;">정문에서 180m 직진 후 우회전</h4>
+            <p style="font-size:0.85rem; color:var(--text-muted);">
+              정문 앞 버스정류장을 지나 편의점 골목 모퉁이에 위치한 통유리 건물 1층입니다.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
   <footer>
-    <p>© 2026 여백 로스터스. 연습용으로 만든 가상의 사이트입니다.</p>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>자리있슈 (Zari-Issue)</h3>
+          <p>
+            캠퍼스 앞 카페의 실시간 좌석 문제를 해결하여 대학생의 소중한 시간을 절약하고 지역 상권을 활성화하는 2026 교양캡스톤디자인 디지털 서비스 프로젝트입니다.
+          </p>
+        </div>
+        <div>
+          <h4 style="color:#fff; font-weight:700; margin-bottom:0.8rem;">프로젝트 목차</h4>
+          <ul style="display:flex; flex-direction:column; gap:0.4rem; font-size:0.85rem;">
+            <li><a href="#problem">1. 문제 정의 (인터뷰 페인포인트)</a></li>
+            <li><a href="#solution">2. 해결 방법 (4대 핵심 기능)</a></li>
+            <li><a href="#compare">3. 유사 서비스 비교 분석</a></li>
+            <li><a href="#prototype">4. 실시간 프로토타입 체험</a></li>
+            <li><a href="#survey">5. 고객 반응 설문 & 차트</a></li>
+            <li><a href="#marketing">6. 타깃 및 마케팅 전략</a></li>
+            <li><a href="#location">7. 매장 위치 및 영업시간</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-credit">
+        © 2026 교양캡스톤디자인 프로젝트팀. All rights reserved. 본 웹사이트는 교육 및 과제 연구 목적으로 제작되었습니다.
+      </div>
+    </div>
   </footer>
 
-  <script src="js/main.js"></script>
+  <!-- Toast Message Element -->
+  <div class="toast-msg" id="toast-msg">
+    <span id="toast-icon">✅</span>
+    <span id="toast-text">알림 메시지</span>
+  </div>
+
+  <!-- ========================================================================
+       JavaScript Code (Vanilla JS)
+       ======================================================================== -->
+  <script>
+    /* ==========================================================================
+       Seat Data & Prototype Logic
+       ========================================================================== */
+    const initialSeats = [
+      { id: "A-01", type: "창가 1인석", hasOutlet: true, isWindow: true, status: "free" },
+      { id: "A-02", type: "창가 1인석", hasOutlet: true, isWindow: true, status: "busy" },
+      { id: "A-03", type: "창가 1인석", hasOutlet: false, isWindow: true, status: "free" },
+      { id: "B-01", type: "벽면 소파석", hasOutlet: true, isWindow: false, status: "free" },
+      { id: "B-02", type: "벽면 소파석", hasOutlet: true, isWindow: false, status: "busy" },
+      { id: "B-03", type: "벽면 소파석", hasOutlet: false, isWindow: false, status: "busy" },
+      { id: "C-01", type: "중앙 스터디 테이블", hasOutlet: true, isWindow: false, status: "free" },
+      { id: "C-02", type: "중앙 스터디 테이블", hasOutlet: true, isWindow: false, status: "hold" },
+      { id: "C-03", type: "중앙 스터디 테이블", hasOutlet: true, isWindow: false, status: "free" },
+      { id: "C-04", type: "중앙 스터디 테이블", hasOutlet: false, isWindow: false, status: "busy" },
+      { id: "D-01", type: "집중 1인 부스석", hasOutlet: true, isWindow: false, status: "free" },
+      { id: "D-02", type: "집중 1인 부스석", hasOutlet: true, isWindow: false, status: "busy" }
+    ];
+
+    let currentSeats = [...initialSeats];
+    let selectedSeatId = null;
+    let currentFilter = 'all';
+
+    function renderSeats() {
+      const grid = document.getElementById('seat-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      let freeCount = 0;
+
+      currentSeats.forEach(seat => {
+        if (seat.status === 'free') freeCount++;
+
+        // Filter check
+        let isVisible = true;
+        if (currentFilter === 'outlet' && !seat.hasOutlet) isVisible = false;
+        if (currentFilter === 'window' && !seat.isWindow) isVisible = false;
+        if (currentFilter === 'free' && seat.status !== 'free') isVisible = false;
+
+        if (!isVisible) return;
+
+        const box = document.createElement('div');
+        box.className = `seat-box state-${seat.status}`;
+        if (selectedSeatId === seat.id) {
+          box.style.borderColor = 'var(--text)';
+          box.style.boxShadow = '0 0 0 3px rgba(30, 77, 56, 0.35)';
+        }
+
+        let statusText = '이용 가능';
+        if (seat.status === 'busy') statusText = '사용 중';
+        if (seat.status === 'hold') statusText = '선점 중 (15m)';
+
+        box.innerHTML = `
+          <div class="seat-top">
+            <span class="seat-id">${seat.id}</span>
+            <span class="seat-badge">${statusText}</span>
+          </div>
+          <div class="seat-meta">
+            <span>${seat.type}</span>
+          </div>
+          <div class="seat-features">
+            ${seat.hasOutlet ? '<span class="tag-outlet">🔌 콘센트</span>' : ''}
+            ${seat.isWindow ? '<span class="tag-window">🪟 창가</span>' : ''}
+          </div>
+        `;
+
+        box.onclick = () => selectSeat(seat);
+        grid.appendChild(box);
+      });
+
+      // Update hero count
+      const heroFree = document.getElementById('hero-free-count');
+      if (heroFree) heroFree.innerText = freeCount;
+    }
+
+    function selectSeat(seat) {
+      selectedSeatId = seat.id;
+      renderSeats();
+
+      const titleEl = document.getElementById('action-seat-title');
+      const descEl = document.getElementById('action-seat-desc');
+      const iconEl = document.getElementById('action-seat-icon');
+      const btn = document.getElementById('btn-reserve-seat');
+
+      let statusMsg = '';
+      if (seat.status === 'free') {
+        statusMsg = '현재 빈자리입니다. 지금 바로 15분 선점 예약할 수 있습니다.';
+        btn.disabled = false;
+        btn.innerText = `⏳ [${seat.id}] 15분 찜하기 신청`;
+        btn.className = "btn btn-primary";
+      } else if (seat.status === 'busy') {
+        statusMsg = '다른 고객이 이용 중인 좌석입니다.';
+        btn.disabled = true;
+        btn.innerText = `❌ 이용 중인 좌석`;
+        btn.className = "btn btn-outline";
+      } else if (seat.status === 'hold') {
+        statusMsg = '다른 학생이 이동 중 찜(선점)한 좌석입니다 (잔여 시간 8분).';
+        btn.disabled = true;
+        btn.innerText = `⏳ 선점 진행 중`;
+        btn.className = "btn btn-outline";
+      }
+
+      titleEl.innerHTML = `선택된 좌석: <strong>${seat.id}</strong> (${seat.type})`;
+      descEl.innerText = `${seat.hasOutlet ? '🔌 콘센트 지원 | ' : ''}${statusMsg}`;
+      iconEl.innerText = seat.hasOutlet ? '🔌' : '🪑';
+    }
+
+    function reserveSelectedSeat() {
+      if (!selectedSeatId) return;
+      const target = currentSeats.find(s => s.id === selectedSeatId);
+      if (target && target.status === 'free') {
+        target.status = 'hold';
+        showToast(`🎉 [${target.id}] 좌석이 15분간 선점되었습니다! 카페로 출발하세요.`);
+        renderSeats();
+        selectSeat(target);
+      }
+    }
+
+    function filterSeats(filterType, btnElement) {
+      currentFilter = filterType;
+      document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+      if (btnElement) btnElement.classList.add('active');
+      renderSeats();
+    }
+
+    /* ==========================================================================
+       Tab Switcher Logic
+       ========================================================================== */
+    function switchProtoTab(tabId) {
+      document.querySelectorAll('.proto-tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.proto-tab-content').forEach(content => content.classList.remove('active'));
+
+      event.currentTarget.classList.add('active');
+      const targetContent = document.getElementById(`proto-tab-${tabId}`);
+      if (targetContent) targetContent.classList.add('active');
+    }
+
+    /* ==========================================================================
+       Digital Stamp Card Logic
+       ========================================================================== */
+    let currentStampCount = 3;
+    const maxStamps = 10;
+
+    function renderStampCard() {
+      const grid = document.getElementById('stamp-grid');
+      const counter = document.getElementById('stamp-counter-text');
+      if (!grid || !counter) return;
+
+      grid.innerHTML = '';
+      counter.innerText = `${currentStampCount} / ${maxStamps}`;
+
+      for (let i = 1; i <= maxStamps; i++) {
+        const slot = document.createElement('div');
+        const isStamped = i <= currentStampCount;
+        slot.className = `stamp-slot ${isStamped ? 'stamped' : ''}`;
+        slot.innerHTML = isStamped ? '☕' : `<span style="font-size:0.75rem; opacity:0.6;">${i}</span>`;
+        slot.title = `${i}번째 스탬프`;
+        grid.appendChild(slot);
+      }
+    }
+
+    function addSingleStamp() {
+      if (currentStampCount < maxStamps) {
+        currentStampCount++;
+        renderStampCard();
+        if (currentStampCount === maxStamps) {
+          showToast(`🎊 축하합니다! 10개 스탬프 달성! '무료 제조 음료 1잔 쿠폰'이 발급되었습니다.`);
+        } else {
+          showToast(`☕ 스탬프 1개가 적립되었습니다! (현재 ${currentStampCount}개)`);
+        }
+      } else {
+        showToast(`이미 도장을 모두 채우셨습니다! 무료 음료 쿠폰을 사용하세요.`);
+      }
+    }
+
+    function resetStamps() {
+      currentStampCount = 0;
+      renderStampCard();
+      showToast(`스탬프 카드가 초기화되었습니다.`);
+    }
+
+    /* ==========================================================================
+       Pre-Order Simulator Logic
+       ========================================================================== */
+    let cart = [];
+    let totalPrice = 0;
+
+    function addToCart(itemName, price) {
+      cart.push({ name: itemName, price: price });
+      totalPrice += price;
+      updateCartDisplay();
+      showToast(`🛒 [${itemName}] 메뉴가 주문서에 추가되었습니다.`);
+    }
+
+    function updateCartDisplay() {
+      const totalEl = document.getElementById('cart-total-price');
+      const summaryEl = document.getElementById('cart-items-summary');
+      if (totalEl) totalEl.innerText = totalPrice.toLocaleString();
+      
+      if (summaryEl) {
+        if (cart.length === 0) {
+          summaryEl.innerText = "담긴 메뉴: 선택된 메뉴가 없습니다.";
+        } else {
+          const names = cart.map(i => i.name).join(', ');
+          summaryEl.innerHTML = `선택 메뉴 (<strong>${cart.length}개</strong>): ${names}`;
+        }
+      }
+    }
+
+    function simulateOrderCheckout() {
+      if (cart.length === 0) {
+        showToast("⚠️ 먼저 주문할 메뉴를 장바구니에 담아주세요!");
+        return;
+      }
+      showToast(`🚀 주문 완료! 총 ${totalPrice.toLocaleString()}원 결제 요청되었습니다. 카페 도착 시 바로 픽업 가능합니다!`);
+      cart = [];
+      totalPrice = 0;
+      updateCartDisplay();
+    }
+
+    /* ==========================================================================
+       Survey & Dynamic Chart Results Logic
+       ========================================================================== */
+    let surveyStats = {
+      total: 124,
+      q1: { very_high: 97, moderate: 21, low: 6 },
+      q2: { seat_outlet: 57, reserve_15m: 35, noise_level: 18, stamp_discount: 14 }
+    };
+
+    function handleSurveySubmit(e) {
+      e.preventDefault();
+      const form = e.target;
+      const q1Val = form.querySelector('input[name="q1"]:checked').value;
+      const q2Val = form.querySelector('input[name="q2"]:checked').value;
+      const commentVal = document.getElementById('user-comment').value.trim();
+
+      // Increment stats
+      surveyStats.total++;
+      if (surveyStats.q1[q1Val] !== undefined) surveyStats.q1[q1Val]++;
+      if (surveyStats.q2[q2Val] !== undefined) surveyStats.q2[q2Val]++;
+
+      // Update Chart display
+      updateSurveyCharts();
+
+      // Add comment to feed
+      if (commentVal) {
+        const feed = document.getElementById('recent-comments-container');
+        if (feed) {
+          const newBubble = document.createElement('div');
+          newBubble.className = 'feedback-bubble';
+          newBubble.style.borderColor = 'var(--primary)';
+          newBubble.style.background = '#ecfdf5';
+          newBubble.innerHTML = `<strong>방금 전 학우 의견:</strong> "${escapeHtml(commentVal)}"`;
+          feed.prepend(newBubble);
+        }
+      }
+
+      showToast(`🎉 설문이 성공적으로 제출되었습니다! 통계 그래프가 실시간 갱신되었습니다.`);
+      form.reset();
+    }
+
+    function updateSurveyCharts() {
+      const total = surveyStats.total;
+      document.getElementById('total-votes-count').innerText = total;
+
+      // Q1 calculation
+      const pVery = Math.round((surveyStats.q1.very_high / total) * 100);
+      const pMod = Math.round((surveyStats.q1.moderate / total) * 100);
+      const pLow = 100 - pVery - pMod;
+
+      document.getElementById('q1-val-very').innerText = `${pVery}% (${surveyStats.q1.very_high}명)`;
+      document.getElementById('q1-val-mod').innerText = `${pMod}% (${surveyStats.q1.moderate}명)`;
+      document.getElementById('q1-val-low').innerText = `${pLow}% (${surveyStats.q1.low}명)`;
+
+      document.getElementById('q1-bar-very').style.width = `${pVery}%`;
+      document.getElementById('q1-bar-mod').style.width = `${pMod}%`;
+      document.getElementById('q1-bar-low').style.width = `${pLow}%`;
+
+      // Q2 calculation
+      const pOutlet = Math.round((surveyStats.q2.seat_outlet / total) * 100);
+      const pReserve = Math.round((surveyStats.q2.reserve_15m / total) * 100);
+      const pNoise = Math.round((surveyStats.q2.noise_level / total) * 100);
+      const pStamp = 100 - pOutlet - pReserve - pNoise;
+
+      document.getElementById('q2-val-outlet').innerText = `${pOutlet}% (${surveyStats.q2.seat_outlet}명)`;
+      document.getElementById('q2-val-reserve').innerText = `${pReserve}% (${surveyStats.q2.reserve_15m}명)`;
+      document.getElementById('q2-val-noise').innerText = `${pNoise}% (${surveyStats.q2.noise_level}명)`;
+      document.getElementById('q2-val-stamp').innerText = `${pStamp}% (${surveyStats.q2.stamp_discount}명)`;
+
+      document.getElementById('q2-bar-outlet').style.width = `${pOutlet}%`;
+      document.getElementById('q2-bar-reserve').style.width = `${pReserve}%`;
+      document.getElementById('q2-bar-noise').style.width = `${pNoise}%`;
+      document.getElementById('q2-bar-stamp').style.width = `${pStamp}%`;
+    }
+
+    function escapeHtml(string) {
+      return String(string).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    /* ==========================================================================
+       Toast Helper
+       ========================================================================== */
+    let toastTimeout;
+    function showToast(message) {
+      const toast = document.getElementById('toast-msg');
+      const text = document.getElementById('toast-text');
+      if (!toast || !text) return;
+
+      text.innerText = message;
+      toast.style.display = 'flex';
+
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3500);
+    }
+
+    /* ==========================================================================
+       Initialize on Load
+       ========================================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      renderSeats();
+      renderStampCard();
+      updateSurveyCharts();
+    });
+  </script>
 </body>
 </html>
